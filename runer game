@@ -1,0 +1,3111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>HD 3D Endless Runner V2</title>
+
+<style>
+*{
+    box-sizing:border-box;
+    margin:0;
+    padding:0;
+}
+
+body{
+    overflow:hidden;
+    background:#02050b;
+    font-family:Arial,sans-serif;
+    user-select:none;
+}
+
+canvas{
+    display:block;
+}
+
+/* ================= HUD ================= */
+
+#hud{
+    position:fixed;
+    top:15px;
+    left:18px;
+    z-index:20;
+    color:white;
+    font-size:17px;
+    font-weight:bold;
+    line-height:1.7;
+    text-shadow:0 2px 8px #000;
+}
+
+#hud span{
+    color:#ffd83d;
+}
+
+#lives{
+    color:#ff4b61 !important;
+    letter-spacing:3px;
+}
+
+#power{
+    color:#63d9ff !important;
+}
+
+/* ================= TOP BUTTONS ================= */
+
+#topButtons{
+    position:fixed;
+    top:15px;
+    right:15px;
+    z-index:30;
+    display:flex;
+    gap:8px;
+}
+
+.smallBtn{
+    width:48px;
+    height:42px;
+    border-radius:12px;
+    border:1px solid rgba(255, 255, 255, 0.2);
+    background:rgba(5,15,30,.65);
+    color:white;
+    font-size:20px;
+    cursor:pointer;
+    backdrop-filter:blur(10px);
+}
+
+/* ================= MENU ================= */
+
+.screen{
+    position:fixed;
+    inset:0;
+    z-index:100;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+        radial-gradient(
+            circle at center,
+            rgba(0,130,255,.15),
+            rgba(0,0,0,.88)
+        );
+    backdrop-filter:blur(7px);
+}
+
+.panel{
+    width:min(92%,480px);
+    padding:38px 30px;
+    text-align:center;
+    color:white;
+    border-radius:28px;
+    background:
+        linear-gradient(
+            145deg,
+            rgba(17,30,58,.96),
+            rgba(3,7,18,.97)
+        );
+    border:1px solid rgba(255,255,255,.16);
+    box-shadow:
+        0 0 80px rgba(0,130,255,.2),
+        inset 0 0 30px rgba(255,255,255,.03);
+}
+
+.logo{
+    font-size:45px;
+    font-weight:900;
+    letter-spacing:2px;
+    margin-bottom:5px;
+    background:linear-gradient(
+        90deg,
+        #35cfff,
+        #ffffff,
+        #5f8cff
+    );
+    -webkit-background-clip:text;
+    color:transparent;
+    text-transform:uppercase;
+    text-shadow:0 0 18px rgba(53,207,255,.35);
+}
+
+.subtitle{
+    color:#9caecc;
+    margin-bottom:28px;
+}
+
+.mainBtn{
+    width:100%;
+    padding:15px;
+    margin:7px 0;
+    border:0;
+    border-radius:14px;
+    color:white;
+    font-size:17px;
+    font-weight:bold;
+    cursor:pointer;
+    background:linear-gradient(
+        135deg,
+        #008cff,
+        #5548ff
+    );
+    box-shadow:0 8px 25px rgba(0,100,255,.25);
+}
+
+.mainBtn:hover{
+    filter:brightness(1.15);
+    transform:translateY(-1px);
+}
+
+#pauseScreen,
+#gameOver{
+    display:none;
+}
+/* ================= CHARACTER SELECT ================= */
+
+.characterGrid{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+    margin:18px 0 10px;
+}
+
+.characterCard{
+    padding:14px 10px;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.14);
+    background:rgba(255,255,255,.045);
+    color:white;
+    cursor:pointer;
+    transition:.18s ease;
+}
+
+.characterCard:hover{
+    transform:translateY(-2px);
+    background:rgba(0,140,255,.12);
+}
+
+.characterCard.selected{
+    border-color:#35cfff;
+    box-shadow:0 0 18px rgba(53,207,255,.28);
+    background:rgba(0,140,255,.15);
+}
+
+.charIcon{
+    font-size:34px;
+    display:block;
+    margin-bottom:5px;
+}
+
+.charName{
+    font-weight:800;
+    font-size:15px;
+}
+
+.charInfo{
+    color:#91a2bb;
+    font-size:11px;
+    margin-top:4px;
+    line-height:1.4;
+}
+
+.selectedText{
+    color:#63d9ff;
+    font-weight:bold;
+    margin:8px 0 14px;
+}
+
+@media(max-width:650px){
+    .characterGrid{grid-template-columns:repeat(2,1fr);}
+}
+
+
+.stats{
+    display:flex;
+    justify-content:space-around;
+    margin:20px 0;
+    color:#b8c6dc;
+}
+
+.stat strong{
+    display:block;
+    color:#ffd83d;
+    font-size:23px;
+}
+
+/* ================= CONTROLS ================= */
+
+#mobileControls{
+    position:fixed;
+    left:0;
+    right:0;
+    bottom:20px;
+    z-index:40;
+    display:flex;
+    justify-content:center;
+    gap:10px;
+    pointer-events:none;
+}
+
+.control{
+    pointer-events:auto;
+    width:60px;
+    height:60px;
+    border-radius:18px;
+    border:1px solid rgba(255,255,255,.2);
+    background:rgba(5,15,30,.65);
+    color:white;
+    font-size:24px;
+    backdrop-filter:blur(10px);
+}
+
+.control:active{
+    transform:scale(.9);
+    background:#087cff;
+}
+
+#hint{
+    position:fixed;
+    bottom:15px;
+    right:15px;
+    color:rgba(255,255,255,.6);
+    z-index:20;
+    font-size:12px;
+}
+
+@media(max-width:650px){
+    #hint{
+        display:none;
+    }
+
+    #hud{
+        font-size:14px;
+    }
+
+    .logo{
+        font-size:35px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<!-- ================= HUD ================= -->
+
+<div id="hud">
+    SCORE: <span id="score">0</span><br>
+    COINS: <span id="coins">0</span><br>
+    LIVES: <span id="lives">♥ ♥ ♥</span><br>
+    SPEED: <span id="speed">60</span><br>
+    GIFTS: <span id="gifts">0</span><br>
+    REWARDS: <span id="rewards">0</span><br>
+    POWER: <span id="power">NONE</span>
+</div>
+
+<!-- ================= TOP BUTTONS ================= -->
+
+<div id="topButtons">
+    <button class="smallBtn" id="pauseBtn">Ⅱ</button>
+    <button class="smallBtn" id="soundBtn">🔊</button>
+</div>
+
+<!-- ================= MENU ================= -->
+
+<div id="menu" class="screen">
+
+    <div class="panel">
+
+        <div class="logo" aria-label="Asadullah Rafiq Runner">ASADULLAH RAFIQ</div>
+
+        <div class="subtitle">
+            HD 3D Endless Adventure • Official Game
+        </div>
+
+        <div class="stats">
+            <div class="stat">
+                <strong>3D</strong>
+                World
+            </div>
+
+            <div class="stat">
+                <strong>∞</strong>
+                Run
+            </div>
+
+            <div class="stat">
+                <strong>HD</strong>
+                Graphics
+            </div>
+        </div>
+
+        <button class="mainBtn" id="startBtn">
+            ▶ START GAME
+        </button>
+
+        <button class="mainBtn" id="instructionsBtn">
+            🎮 CONTROLS
+        </button>
+        <button class="mainBtn" id="characterBtn">
+            🧑 CHARACTER
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ================= CHARACTER SELECT ================= -->
+
+<div id="characterSelect" class="screen" style="display:none">
+
+    <div class="panel">
+
+        <div class="logo" style="font-size:32px">CHARACTERS</div>
+
+        <div class="subtitle">
+            Choose your runner
+        </div>
+
+        <div id="selectedCharacterText" class="selectedText">
+            Selected: Classic Runner
+        </div>
+
+        <div class="characterGrid">
+
+            <div class="characterCard selected" data-character="classic">
+                <span class="charIcon">🏃</span>
+                <div class="charName">Classic</div>
+                <div class="charInfo">Balanced runner</div>
+            </div>
+
+            <div class="characterCard" data-character="ninja">
+                <span class="charIcon">🥷</span>
+                <div class="charName">Ninja</div>
+                <div class="charInfo">Fast + high jump</div>
+            </div>
+
+            <div class="characterCard" data-character="robot">
+                <span class="charIcon">🤖</span>
+                <div class="charName">Robot</div>
+                <div class="charInfo">Strong futuristic look</div>
+            </div>
+
+            <div class="characterCard" data-character="space">
+                <span class="charIcon">🚀</span>
+                <div class="charName">Space</div>
+                <div class="charInfo">High-tech runner</div>
+            </div>
+
+            <div class="characterCard" data-character="neon">
+                <span class="charIcon">⚡</span>
+                <div class="charName">Neon</div>
+                <div class="charInfo">Electric style</div>
+            </div>
+
+            <div class="characterCard" data-character="gold">
+                <span class="charIcon">👑</span>
+                <div class="charName">Gold</div>
+                <div class="charInfo">Premium golden style</div>
+            </div>
+
+        </div>
+
+        <button class="mainBtn" id="characterBackBtn">
+            BACK
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ================= CONTROLS INFO ================= -->
+
+<div id="instructions" class="screen" style="display:none">
+
+    <div class="panel">
+
+        <div class="logo" style="font-size:32px">
+            CONTROLS
+        </div>
+
+        <p style="line-height:2;color:#b8c6dc">
+            ← / A = Move Left<br>
+            → / D = Move Right<br>
+            ↑ / W / SPACE = Jump<br>
+            ↓ / S = Slide<br>
+            P = Pause
+        </p>
+
+        <button class="mainBtn" id="backBtn">
+            BACK
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ================= PAUSE ================= -->
+
+<div id="pauseScreen" class="screen">
+
+    <div class="panel">
+
+        <div class="logo">PAUSED</div>
+
+        <p style="color:#aebbd0;margin:20px">
+            Your run is paused.
+        </p>
+
+        <button class="mainBtn" id="resumeBtn">
+            ▶ RESUME
+        </button>
+
+        <button class="mainBtn" id="menuBtn">
+            ⌂ MAIN MENU
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ================= GAME OVER ================= -->
+
+<div id="gameOver" class="screen">
+
+    <div class="panel">
+
+        <div class="logo">GAME OVER</div>
+
+        <div class="stats">
+
+            <div class="stat">
+                <strong id="finalScore">0</strong>
+                SCORE
+            </div>
+
+            <div class="stat">
+                <strong id="finalCoins">0</strong>
+                COINS
+            </div>
+
+            <div class="stat">
+                <strong id="finalGifts">0</strong>
+                GIFTS
+            </div>
+
+            <div class="stat">
+                <strong id="finalRewards">0</strong>
+                REWARDS
+            </div>
+
+        </div>
+
+        <button class="mainBtn" id="againBtn">
+            🔄 PLAY AGAIN
+        </button>
+
+        <button class="mainBtn" id="gameMenuBtn">
+            ⌂ MAIN MENU
+        </button>
+
+    </div>
+
+</div>
+
+
+<!-- ================= MOBILE ================= -->
+
+<div id="mobileControls">
+
+    <button class="control" id="leftBtn">◀</button>
+    <button class="control" id="jumpBtn">▲</button>
+    <button class="control" id="slideBtn">▼</button>
+    <button class="control" id="rightBtn">▶</button>
+
+</div>
+
+
+<div id="hint">
+    A/D or ←/→ • W/SPACE/↑ Jump • S/↓ Slide • P Pause
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+
+<script>
+
+/* =========================================================
+   BASIC SETUP
+========================================================= */
+
+const scene = new THREE.Scene();
+
+scene.background = new THREE.Color(0x081426);
+
+scene.fog = new THREE.FogExp2(
+    0x081426,
+    0.008
+);
+
+
+/* CAMERA */
+
+const camera = new THREE.PerspectiveCamera(
+    65,
+    innerWidth / innerHeight,
+    .1,
+    1000
+);
+
+camera.position.set(
+    0,
+    5.4,
+    12
+);
+
+
+/* RENDERER */
+
+const renderer = new THREE.WebGLRenderer({
+    antialias:true,
+    powerPreference:"high-performance"
+});
+
+renderer.setSize(
+    innerWidth,
+    innerHeight
+);
+
+renderer.setPixelRatio(
+    Math.min(
+        window.devicePixelRatio,
+        2
+    )
+);
+
+renderer.shadowMap.enabled = true;
+
+renderer.shadowMap.type =
+    THREE.PCFSoftShadowMap;
+
+renderer.outputColorSpace =
+    THREE.SRGBColorSpace;
+
+renderer.toneMapping =
+    THREE.ACESFilmicToneMapping;
+
+renderer.toneMappingExposure = 1.15;
+
+document.body.appendChild(
+    renderer.domElement
+);
+
+
+/* =========================================================
+   LIGHTS
+========================================================= */
+
+const hemi =
+    new THREE.HemisphereLight(
+        0x8fd8ff,
+        0x11131c,
+        2
+    );
+
+scene.add(hemi);
+
+
+const sun =
+    new THREE.DirectionalLight(
+        0xffffff,
+        4
+    );
+
+sun.position.set(
+    30,
+    60,
+    20
+);
+
+sun.castShadow = true;
+
+sun.shadow.mapSize.width = 2048;
+sun.shadow.mapSize.height = 2048;
+
+sun.shadow.camera.left = -80;
+sun.shadow.camera.right = 80;
+sun.shadow.camera.top = 80;
+sun.shadow.camera.bottom = -80;
+
+scene.add(sun);
+
+
+/* NIGHT LIGHT */
+
+const cityLight =
+    new THREE.PointLight(
+        0x168cff,
+        30,
+        100
+    );
+
+cityLight.position.set(
+    0,
+    12,
+    -40
+);
+
+scene.add(cityLight);
+
+
+/* =========================================================
+   MATERIALS
+========================================================= */
+
+const roadMat =
+    new THREE.MeshStandardMaterial({
+        color:0x151a22,
+        roughness:.82,
+        metalness:.12
+    });
+
+
+const railMat =
+    new THREE.MeshStandardMaterial({
+        color:0xbcc5d1,
+        roughness:.22,
+        metalness:.95
+    });
+
+
+const sleeperMat =
+    new THREE.MeshStandardMaterial({
+        color:0x3b2921,
+        roughness:.9
+    });
+
+
+const metalMat =
+    new THREE.MeshStandardMaterial({
+        color:0x202936,
+        roughness:.3,
+        metalness:.9
+    });
+
+
+const coinMat =
+    new THREE.MeshStandardMaterial({
+        color:0xffd21c,
+        emissive:0xff7b00,
+        emissiveIntensity:1.5,
+        metalness:.85,
+        roughness:.16
+    });
+
+
+/* =========================================================
+   TRACK
+========================================================= */
+
+const track =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            18,
+            .4,
+            1000
+        ),
+        roadMat
+    );
+
+track.position.set(
+    0,
+    -.3,
+    -450
+);
+
+track.receiveShadow = true;
+
+scene.add(track);
+
+
+/* RAILS */
+
+const railPositions =
+    [-6,-2,2,6];
+
+railPositions.forEach(x=>{
+
+    const rail =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                .18,
+                .18,
+                1000
+            ),
+            railMat
+        );
+
+    rail.position.set(
+        x,
+        .05,
+        -450
+    );
+
+    rail.castShadow = true;
+
+    scene.add(rail);
+});
+
+
+/* SLEEPERS */
+
+const sleepers=[];
+
+for(
+    let z=10;
+    z>-950;
+    z-=3
+){
+
+    const sleeper =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                16,
+                .3,
+                .7
+            ),
+            sleeperMat
+        );
+
+    sleeper.position.set(
+        0,
+        -.05,
+        z
+    );
+
+    sleeper.receiveShadow=true;
+
+    scene.add(sleeper);
+
+    sleepers.push(sleeper);
+}
+
+
+/* =========================================================
+   PLAYER
+========================================================= */
+
+const player =
+    new THREE.Group();
+
+player.position.set(
+    0,
+    1.1,
+    0
+);
+
+scene.add(player);
+
+
+/* BODY */
+
+const bodyMat =
+    new THREE.MeshStandardMaterial({
+        color:0x137bff,
+        roughness:.4,
+        metalness:.2
+    });
+
+const body =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            1.15,
+            1.55,
+            .7
+        ),
+        bodyMat
+    );
+
+body.position.y=.2;
+body.castShadow=true;
+
+player.add(body);
+
+
+/* HEAD */
+
+const head =
+    new THREE.Mesh(
+        new THREE.SphereGeometry(
+            .48,
+            32,
+            32
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0xd99a72,
+            roughness:.7
+        })
+    );
+
+head.position.y=1.25;
+
+head.castShadow=true;
+
+player.add(head);
+
+
+/* HAIR */
+
+const hair =
+    new THREE.Mesh(
+        new THREE.SphereGeometry(
+            .49,
+            32,
+            20
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0x121212,
+            roughness:.6
+        })
+    );
+
+hair.scale.y=.55;
+
+hair.position.y=1.55;
+
+player.add(hair);
+
+
+/* BACKPACK */
+
+const backpack =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            .9,
+            1.15,
+            .35
+        ),
+        new THREE.MeshStandardMaterial({
+            color:0x161d29,
+            roughness:.5
+        })
+    );
+
+backpack.position.set(
+    0,
+    .35,
+    .5
+);
+
+player.add(backpack);
+
+
+/* LIMBS */
+
+const skinMat =
+    new THREE.MeshStandardMaterial({
+        color:0xd99a72,
+        roughness:.7
+    });
+
+const clothesMat =
+    new THREE.MeshStandardMaterial({
+        color:0x111927,
+        roughness:.6
+    });
+
+
+const leftArm =
+    new THREE.Mesh(
+        new THREE.CapsuleGeometry(
+            .16,
+            .75,
+            8,
+            16
+        ),
+        skinMat
+    );
+
+const rightArm =
+    leftArm.clone();
+
+
+leftArm.position.set(
+    -.75,
+    .25,
+    0
+);
+
+rightArm.position.set(
+    .75,
+    .25,
+    0
+);
+
+player.add(leftArm);
+player.add(rightArm);
+
+
+const leftLeg =
+    new THREE.Mesh(
+        new THREE.CapsuleGeometry(
+            .19,
+            .8,
+            8,
+            16
+        ),
+        clothesMat
+    );
+
+const rightLeg =
+    leftLeg.clone();
+
+
+leftLeg.position.set(
+    -.32,
+    -.8,
+    0
+);
+
+rightLeg.position.set(
+    .32,
+    -.8,
+    0
+);
+
+player.add(leftLeg);
+player.add(rightLeg);
+
+
+/* SHOES */
+
+const shoeMat =
+    new THREE.MeshStandardMaterial({
+        color:0xf4f7ff,
+        roughness:.3
+    });
+
+
+const leftShoe =
+    new THREE.Mesh(
+        new THREE.BoxGeometry(
+            .45,
+            .22,
+            .8
+        ),
+        shoeMat
+    );
+
+const rightShoe =
+    leftShoe.clone();
+
+
+leftShoe.position.set(
+    -.32,
+    -1.25,
+    -.18
+);
+
+rightShoe.position.set(
+    .32,
+    -1.25,
+    -.18
+);
+
+player.add(leftShoe);
+player.add(rightShoe);
+
+
+/* PLAYER SHADOW */
+
+const playerShadow =
+    new THREE.Mesh(
+        new THREE.CircleGeometry(
+            .85,
+            32
+        ),
+        new THREE.MeshBasicMaterial({
+            color:0x000000,
+            transparent:true,
+            opacity:.35
+        })
+    );
+
+playerShadow.rotation.x =
+    -Math.PI/2;
+
+playerShadow.position.y =
+    -1.35;
+
+player.add(playerShadow);
+
+
+/* =========================================================
+   CHARACTER TYPES / OPTIONAL SKINS
+========================================================= */
+
+const characterStyles = {
+    classic:{
+        name:"Classic Runner",
+        body:0x137bff,
+        clothes:0x111927,
+        skin:0xd99a72,
+        shoe:0xf4f7ff,
+        speed:1,
+        jump:1,
+        accessory:"none"
+    },
+    ninja:{
+        name:"Ninja",
+        body:0x191b24,
+        clothes:0x080a12,
+        skin:0xc88462,
+        shoe:0x15151c,
+        speed:1.08,
+        jump:1.12,
+        accessory:"ninja"
+    },
+    robot:{
+        name:"Robot",
+        body:0x68778c,
+        clothes:0x303b4d,
+        skin:0xb7c5d8,
+        shoe:0x9daabd,
+        speed:.98,
+        jump:.98,
+        accessory:"robot"
+    },
+    space:{
+        name:"Space Runner",
+        body:0xe9eef7,
+        clothes:0x27314b,
+        skin:0xd99a72,
+        shoe:0x77cfff,
+        speed:1.03,
+        jump:1.08,
+        accessory:"space"
+    },
+    neon:{
+        name:"Neon Runner",
+        body:0x5b19ff,
+        clothes:0x10142a,
+        skin:0xd99a72,
+        shoe:0x35f6ff,
+        speed:1.06,
+        jump:1.03,
+        accessory:"neon"
+    },
+    gold:{
+        name:"Golden Runner",
+        body:0xffb300,
+        clothes:0x3a2100,
+        skin:0xe0a070,
+        shoe:0xffdf63,
+        speed:1.02,
+        jump:1.02,
+        accessory:"gold"
+    }
+};
+
+let selectedCharacter = "classic";
+const characterAccessory = new THREE.Group();
+player.add(characterAccessory);
+
+function makeAccessoryMaterial(color, emissive=0x000000){
+    return new THREE.MeshStandardMaterial({
+        color,
+        emissive,
+        emissiveIntensity: emissive ? 1.4 : 0,
+        metalness:.7,
+        roughness:.22
+    });
+}
+
+function clearCharacterAccessory(){
+    while(characterAccessory.children.length){
+        characterAccessory.remove(characterAccessory.children[0]);
+    }
+}
+
+function applyCharacterStyle(type){
+    const style = characterStyles[type] || characterStyles.classic;
+    selectedCharacter = type;
+    characterSpeedMultiplier = style.speed;
+    characterJumpMultiplier = style.jump;
+
+    body.material.color.setHex(style.body);
+    clothesMat.color.setHex(style.clothes);
+    skinMat.color.setHex(style.skin);
+    shoeMat.color.setHex(style.shoe);
+
+    clearCharacterAccessory();
+
+    if(style.accessory === "ninja"){
+        const mask = new THREE.Mesh(
+            new THREE.BoxGeometry(.92,.32,.12),
+            makeAccessoryMaterial(0x05060a)
+        );
+        mask.position.set(0,1.25,-.43);
+        player.add(mask);
+        characterAccessory.add(mask);
+
+        const band = new THREE.Mesh(
+            new THREE.BoxGeometry(1.18,.09,.1),
+            makeAccessoryMaterial(0xb50028)
+        );
+        band.position.set(0,1.63,.02);
+        characterAccessory.add(band);
+    }
+
+    if(style.accessory === "robot"){
+        const antenna = new THREE.Mesh(
+            new THREE.CylinderGeometry(.045,.045,.45,10),
+            makeAccessoryMaterial(0x93a9c4,0x164cff)
+        );
+        antenna.position.set(0,2.05,0);
+        characterAccessory.add(antenna);
+
+        const eye = new THREE.Mesh(
+            new THREE.BoxGeometry(.5,.13,.08),
+            new THREE.MeshBasicMaterial({color:0x32e8ff})
+        );
+        eye.position.set(0,1.28,-.45);
+        characterAccessory.add(eye);
+    }
+
+    if(style.accessory === "space"){
+        const visor = new THREE.Mesh(
+            new THREE.SphereGeometry(.50,24,16),
+            new THREE.MeshStandardMaterial({
+                color:0x18283c,
+                emissive:0x147bff,
+                emissiveIntensity:.65,
+                transparent:true,
+                opacity:.72,
+                metalness:.8,
+                roughness:.1
+            })
+        );
+        visor.scale.set(1,.62,.35);
+        visor.position.set(0,1.30,-.36);
+        characterAccessory.add(visor);
+
+        const antenna = new THREE.Mesh(
+            new THREE.CylinderGeometry(.035,.035,.32,10),
+            makeAccessoryMaterial(0x77cfff,0x147bff)
+        );
+        antenna.position.set(.32,1.86,0);
+        characterAccessory.add(antenna);
+    }
+
+    if(style.accessory === "neon"){
+        const ring = new THREE.Mesh(
+            new THREE.TorusGeometry(.72,.055,12,32),
+            makeAccessoryMaterial(0x35f6ff,0x35f6ff)
+        );
+        ring.rotation.x=Math.PI/2;
+        ring.position.y=.35;
+        characterAccessory.add(ring);
+
+        const chest = new THREE.Mesh(
+            new THREE.BoxGeometry(.45,.55,.05),
+            new THREE.MeshBasicMaterial({color:0xff31e8})
+        );
+        chest.position.set(0,.35,-.38);
+        characterAccessory.add(chest);
+    }
+
+    if(style.accessory === "gold"){
+        const crown = new THREE.Mesh(
+            new THREE.ConeGeometry(.42,.48,5),
+            makeAccessoryMaterial(0xffd21c,0xff7b00)
+        );
+        crown.position.set(0,1.92,0);
+        crown.rotation.y=Math.PI/5;
+        characterAccessory.add(crown);
+    }
+
+    document.getElementById("selectedCharacterText").innerText =
+        "Selected: " + style.name;
+
+    document.querySelectorAll(".characterCard").forEach(card=>{
+        card.classList.toggle(
+            "selected",
+            card.dataset.character===type
+        );
+    });
+}
+
+
+/* =========================================================
+   OBSTACLES & GIFTS
+========================================================= */
+
+const obstacles=[];
+const gifts=[];
+
+function createObstacle(type,x,z){
+    const group=new THREE.Group();
+    let matColor=0xff5a36;
+
+    if(type==="hurdle") matColor=0xff9f1c;
+    if(type==="lowbar") matColor=0xe83e8c;
+    if(type==="crate") matColor=0x8b5a2b;
+
+    const mat=new THREE.MeshStandardMaterial({color:matColor,roughness:.5,metalness:.2});
+
+    if(type==="lowbar"){
+        const pole1=new THREE.Mesh(new THREE.BoxGeometry(.22,2.2,.22),mat);
+        const pole2=pole1.clone();
+        const bar=new THREE.Mesh(new THREE.BoxGeometry(3.2,.35,.35),mat);
+        pole1.position.set(-1.45,1.1,0); pole2.position.set(1.45,1.1,0); bar.position.set(0,2.05,0);
+        group.add(pole1,pole2,bar);
+    }else{
+        const h=type==="crate"?1.35:.85;
+        const box=new THREE.Mesh(new THREE.BoxGeometry(2.8,h,.9),mat);
+        box.position.y=h/2; box.castShadow=true; group.add(box);
+        if(type==="hurdle"){
+            const stripe=new THREE.Mesh(new THREE.BoxGeometry(2.5,.12,.94),new THREE.MeshBasicMaterial({color:0xffffff}));
+            stripe.position.y=h*.62; group.add(stripe);
+        }
+    }
+    group.position.set(x,0,z);
+    group.userData.type=type;
+    group.userData.hit=false;
+    scene.add(group);
+    obstacles.push(group);
+}
+
+function spawnObstacle(){
+    const types=["hurdle","lowbar","crate"];
+    const type=types[Math.floor(Math.random()*types.length)];
+    const laneIndex=Math.floor(Math.random()*3);
+    createObstacle(type,lanes[laneIndex],player.position.z-THREE.MathUtils.randFloat(95,135));
+}
+
+function createGift(x,z){
+    const group=new THREE.Group();
+    const box=new THREE.Mesh(new THREE.BoxGeometry(.85,.7,.85),new THREE.MeshStandardMaterial({color:0xff3d68,emissive:0x5a0018,emissiveIntensity:.45,roughness:.35}));
+    const ribbonMat=new THREE.MeshStandardMaterial({color:0xffd21c,emissive:0xff8b00,emissiveIntensity:.5,metalness:.7});
+    const ribbonV=new THREE.Mesh(new THREE.BoxGeometry(.16,.75,.9),ribbonMat);
+    const ribbonH=new THREE.Mesh(new THREE.BoxGeometry(.9,.16,.9),ribbonMat);
+    const bow=new THREE.Mesh(new THREE.TorusGeometry(.16,.06,10,20),ribbonMat);
+    box.position.y=.42; ribbonV.position.set(0,.42,0); ribbonH.position.set(0,.42,0); bow.position.set(0,.82,0);
+    group.add(box,ribbonV,ribbonH,bow);
+    group.position.set(x,0,z);
+    group.userData.collected=false;
+    scene.add(group); gifts.push(group);
+}
+
+function spawnGift(){
+    const laneIndex=Math.floor(Math.random()*3);
+    createGift(lanes[laneIndex],player.position.z-THREE.MathUtils.randFloat(70,110));
+}
+
+function obstacleCollision(){
+    for(let i=obstacles.length-1;i>=0;i--){
+        const o=obstacles[i];
+        if(Math.abs(o.position.z-player.position.z)<2.4 && Math.abs(o.position.x-player.position.x)<1.65 && !o.userData.hit){
+            let safe=false;
+            if(o.userData.type==="hurdle") safe=jumping || player.position.y>1.65;
+            if(o.userData.type==="lowbar") safe=sliding;
+            if(o.userData.type==="crate") safe=jumping || player.position.y>1.7;
+            if(!safe){
+                o.userData.hit=true;
+                if(shield){
+                    shield=false; activePower="NONE"; powerTime=0; updatePowerHUD();
+                    beep(120,.2,"sawtooth");
+                }else{
+                    loseLife();
+                }
+                scene.remove(o); obstacles.splice(i,1); continue;
+            }
+        }
+        if(o.position.z>player.position.z+30){scene.remove(o);obstacles.splice(i,1);}
+    }
+}
+
+function giftCollision(){
+    for(let i=gifts.length-1;i>=0;i--){
+        const g=gifts[i];
+        g.rotation.y+=.06; g.rotation.z=Math.sin(performance.now()*.004+g.position.z)*.08;
+        g.position.y=.18+Math.sin(performance.now()*.006+g.position.z)*.18;
+        if(distanceXZ(player,g)<1.8 && Math.abs(player.position.y-g.position.y)<2){
+            giftCount++; score+=250; coinCount+=2;
+            beep(1200,.12,"triangle");
+            if(giftCount%5===0){ rewardCount++; score+=1000; coinCount+=10; beep(1600,.25,"square"); }
+            scene.remove(g); gifts.splice(i,1);
+        }else if(g.position.z>player.position.z+30){scene.remove(g);gifts.splice(i,1);}
+    }
+}
+
+/* =========================================================
+   POWER-UP OBJECTS
+========================================================= */
+
+const powerUps=[];
+
+function createPowerUp(
+    type,
+    x,
+    z
+){
+
+    let color=0xffffff;
+
+    if(type==="shield")
+        color=0x35c8ff;
+
+    if(type==="magnet")
+        color=0xff38c8;
+
+    if(type==="boost")
+        color=0xff8b00;
+
+
+    const group =
+        new THREE.Group();
+
+
+    const ring =
+        new THREE.Mesh(
+            new THREE.TorusGeometry(
+                .55,
+                .13,
+                16,
+                32
+            ),
+            new THREE.MeshStandardMaterial({
+                color:color,
+                emissive:color,
+                emissiveIntensity:1.5,
+                metalness:.8,
+                roughness:.15
+            })
+        );
+
+    group.add(ring);
+
+
+    const core =
+        new THREE.Mesh(
+            new THREE.SphereGeometry(
+                .25,
+                20,
+                20
+            ),
+            new THREE.MeshBasicMaterial({
+                color:color
+            })
+        );
+
+    group.add(core);
+
+
+    group.position.set(
+        x,
+        1.4,
+        z
+    );
+
+
+    group.userData.type=type;
+
+    scene.add(group);
+
+    powerUps.push(group);
+}
+
+
+/* =========================================================
+   TRAINS
+========================================================= */
+
+const trains=[];
+
+function createTrain(){
+
+    const train =
+        new THREE.Group();
+
+
+    const redMat =
+        new THREE.MeshStandardMaterial({
+            color:0xc82138,
+            roughness:.25,
+            metalness:.7
+        });
+
+
+    const main =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                3.4,
+                3.5,
+                12
+            ),
+            redMat
+        );
+
+    main.position.y=1.8;
+
+    main.castShadow=true;
+
+    train.add(main);
+
+
+    const roof =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                3.6,
+                .35,
+                12.3
+            ),
+            metalMat
+        );
+
+    roof.position.y=3.65;
+
+    train.add(roof);
+
+
+    const windowMat =
+        new THREE.MeshStandardMaterial({
+            color:0x071522,
+            emissive:0x06345a,
+            emissiveIntensity:.8,
+            metalness:.8,
+            roughness:.12
+        });
+
+
+    for(
+        let z=-4.5;
+        z<=4.5;
+        z+=3
+    ){
+
+        const window =
+            new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    2.3,
+                    1.1,
+                    .08
+                ),
+                windowMat
+            );
+
+        window.position.set(
+            0,
+            2.4,
+            z
+        );
+
+        window.rotation.y =
+            Math.PI/2;
+
+        train.add(window);
+    }
+
+
+    /* HEADLIGHTS */
+
+    const lightMat =
+        new THREE.MeshBasicMaterial({
+            color:0xffffcc
+        });
+
+
+    for(
+        const x of [-.7,.7]
+    ){
+
+        const light =
+            new THREE.Mesh(
+                new THREE.SphereGeometry(
+                    .17,
+                    16,
+                    16
+                ),
+                lightMat
+            );
+
+        light.position.set(
+            x,
+            1.5,
+            -6.15
+        );
+
+        train.add(light);
+    }
+
+
+    train.position.y=0;
+
+    scene.add(train);
+
+    trains.push(train);
+
+    return train;
+}
+
+
+/* =========================================================
+   COINS
+========================================================= */
+
+const coins=[];
+
+function createCoin(
+    x,
+    z,
+    y=1.4
+){
+
+    const coin =
+        new THREE.Mesh(
+            new THREE.TorusGeometry(
+                .42,
+                .13,
+                16,
+                32
+            ),
+            coinMat
+        );
+
+    coin.position.set(
+        x,
+        y,
+        z
+    );
+
+    coin.rotation.y =
+        Math.PI/2;
+
+    coin.castShadow=true;
+
+    scene.add(coin);
+
+    coins.push(coin);
+}
+
+
+/* =========================================================
+   WORLD BUILDINGS
+========================================================= */
+
+const buildings=[];
+
+function createBuilding(side){
+
+    const width =
+        THREE.MathUtils.randFloat(
+            3,
+            7
+        );
+
+    const height =
+        THREE.MathUtils.randFloat(
+            7,
+            30
+        );
+
+    const depth =
+        THREE.MathUtils.randFloat(
+            4,
+            9
+        );
+
+
+    const building =
+        new THREE.Mesh(
+            new THREE.BoxGeometry(
+                width,
+                height,
+                depth
+            ),
+            new THREE.MeshStandardMaterial({
+                color:new THREE.Color()
+                    .setHSL(
+                        .58,
+                        .15,
+                        THREE.MathUtils.randFloat(
+                            .12,
+                            .27
+                        )
+                    ),
+                roughness:.75
+            })
+        );
+
+
+    building.position.set(
+        side *
+        THREE.MathUtils.randFloat(
+            15,
+            30
+        ),
+        height/2,
+        THREE.MathUtils.randFloat(
+            -850,
+            20
+        )
+    );
+
+
+    building.castShadow=true;
+
+    scene.add(building);
+
+    buildings.push(building);
+
+
+    /* WINDOWS */
+
+    const windowMat =
+        new THREE.MeshBasicMaterial({
+            color:0xffd66b
+        });
+
+
+    for(
+        let y=2;
+        y<height-1;
+        y+=3
+    ){
+
+        if(
+            Math.random()<.28
+        )
+            continue;
+
+
+        const win =
+            new THREE.Mesh(
+                new THREE.BoxGeometry(
+                    .65,
+                    .75,
+                    .05
+                ),
+                windowMat
+            );
+
+
+        win.position.set(
+            0,
+            -height/2+y,
+            depth/2+.03
+        );
+
+        building.add(win);
+    }
+}
+
+
+for(
+    let i=0;
+    i<45;
+    i++
+){
+
+    createBuilding(-1);
+    createBuilding(1);
+}
+
+
+/* =========================================================
+   GAME VARIABLES
+========================================================= */
+
+const lanes=[
+    -4,
+    0,
+    4
+];
+
+let lane=1;
+
+let score=0;
+let coinCount=0;
+
+let lives=3;
+
+let speed=.45;
+
+let running=false;
+let paused=false;
+
+let jumping=false;
+let sliding=false;
+
+let jumpVelocity=0;
+
+let runTime=0;
+
+let spawnTimer=0;
+let coinTimer=0;
+let powerTimer=0;
+let obstacleTimer=0;
+let giftTimer=0;
+
+let giftCount=0;
+let rewardCount=0;
+
+let activePower="NONE";
+let powerTime=0;
+
+let shield=false;
+let magnet=false;
+let boost=false;
+
+let soundOn=true;
+
+let characterSpeedMultiplier=1;
+let characterJumpMultiplier=1;
+
+let dayTime=0;
+
+let lastTime=performance.now();
+
+
+/* =========================================================
+   SIMPLE SOUND SYSTEM
+========================================================= */
+
+let audioCtx=null;
+
+function initAudio(){
+
+    if(!audioCtx){
+
+        audioCtx =
+            new (
+                window.AudioContext ||
+                window.webkitAudioContext
+            )();
+    }
+}
+
+
+function beep(
+    frequency,
+    duration=.08,
+    type="sine"
+){
+
+    if(!soundOn)
+        return;
+
+    initAudio();
+
+    const osc =
+        audioCtx.createOscillator();
+
+    const gain =
+        audioCtx.createGain();
+
+    osc.frequency.value=
+        frequency;
+
+    osc.type=type;
+
+    gain.gain.setValueAtTime(
+        .08,
+        audioCtx.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        .001,
+        audioCtx.currentTime+
+        duration
+    );
+
+    osc.connect(gain);
+
+    gain.connect(
+        audioCtx.destination
+    );
+
+    osc.start();
+
+    osc.stop(
+        audioCtx.currentTime+
+        duration
+    );
+}
+
+
+/* =========================================================
+   CONTROLS
+========================================================= */
+
+function moveLeft(){
+
+    if(!running || paused)
+        return;
+
+    lane=Math.max(
+        0,
+        lane-1
+    );
+
+    beep(240,.04);
+}
+
+
+function moveRight(){
+
+    if(!running || paused)
+        return;
+
+    lane=Math.min(
+        2,
+        lane+1
+    );
+
+    beep(280,.04);
+}
+
+
+function jump(){
+
+    if(
+        !running ||
+        paused ||
+        jumping ||
+        sliding
+    )
+        return;
+
+    jumping=true;
+
+    jumpVelocity=.32*characterJumpMultiplier;
+
+    beep(520,.1);
+}
+
+
+function slide(){
+
+    if(
+        !running ||
+        paused ||
+        jumping
+    )
+        return;
+
+    sliding=true;
+
+    beep(180,.08);
+
+    setTimeout(
+        ()=>{
+            sliding=false;
+        },
+        700
+    );
+}
+
+
+/* KEYBOARD */
+
+window.addEventListener(
+    "keydown",
+    e=>{
+
+        if(
+            e.key==="ArrowLeft" ||
+            e.key.toLowerCase()==="a"
+        )
+            moveLeft();
+
+
+        if(
+            e.key==="ArrowRight" ||
+            e.key.toLowerCase()==="d"
+        )
+            moveRight();
+
+
+        if(
+            e.key==="ArrowUp" ||
+            e.key===" " ||
+            e.key.toLowerCase()==="w"
+        )
+            jump();
+
+
+        if(
+            e.key==="ArrowDown" ||
+            e.key.toLowerCase()==="s"
+        )
+            slide();
+
+
+        if(
+            e.key.toLowerCase()==="p"
+        )
+            togglePause();
+    }
+);
+
+
+/* MOBILE */
+
+leftBtn.onclick=moveLeft;
+rightBtn.onclick=moveRight;
+jumpBtn.onclick=jump;
+slideBtn.onclick=slide;
+
+
+/* =========================================================
+   SPAWN TRAIN
+========================================================= */
+
+function spawnTrain(){
+
+    const train=
+        createTrain();
+
+    const randomLane=
+        Math.floor(
+            Math.random()*3
+        );
+
+    train.position.x=
+        lanes[randomLane];
+
+    train.position.z=
+        player.position.z-
+        THREE.MathUtils.randFloat(
+            105,
+            145
+        );
+}
+
+
+/* =========================================================
+   SPAWN COINS
+========================================================= */
+
+function spawnCoinLine(){
+
+    const randomLane=
+        Math.floor(
+            Math.random()*3
+        );
+
+
+    for(
+        let i=0;
+        i<9;
+        i++
+    ){
+
+        createCoin(
+            lanes[randomLane],
+            player.position.z-
+            65-
+            i*4,
+            1.4+
+            Math.sin(i*.7)*.15
+        );
+    }
+}
+
+
+/* =========================================================
+   SPAWN POWER
+========================================================= */
+
+function spawnPower(){
+
+    const types=[
+        "shield",
+        "magnet",
+        "boost"
+    ];
+
+    const type=
+        types[
+            Math.floor(
+                Math.random()*
+                types.length
+            )
+        ];
+
+
+    const randomLane=
+        Math.floor(
+            Math.random()*3
+        );
+
+
+    createPowerUp(
+        type,
+        lanes[randomLane],
+        player.position.z-90
+    );
+}
+
+
+/* =========================================================
+   POWER ACTIVATION
+========================================================= */
+
+function activatePower(type){
+
+    activePower=
+        type.toUpperCase();
+
+    powerTime=8;
+
+    shield=false;
+    magnet=false;
+    boost=false;
+
+
+    if(type==="shield")
+        shield=true;
+
+    if(type==="magnet")
+        magnet=true;
+
+    if(type==="boost")
+        boost=true;
+
+
+    beep(800,.15,"square");
+
+    updatePowerHUD();
+}
+
+
+function updatePowerHUD(){
+
+    document
+        .getElementById("power")
+        .innerText=
+        activePower==="NONE"
+        ?
+        "NONE"
+        :
+        activePower+
+        " "+
+        Math.ceil(powerTime)+"s";
+}
+
+
+/* =========================================================
+   COLLISION
+========================================================= */
+
+function distanceXZ(
+    a,
+    b
+){
+
+    const dx=
+        a.position.x-
+        b.position.x;
+
+    const dz=
+        a.position.z-
+        b.position.z;
+
+    return Math.sqrt(
+        dx*dx+
+        dz*dz
+    );
+}
+
+
+function trainCollision(){
+
+    for(
+        let i=trains.length-1;
+        i>=0;
+        i--
+    ){
+
+        const train=
+            trains[i];
+
+
+        if(
+            Math.abs(
+                train.position.z-
+                player.position.z
+            )<5.5 &&
+            Math.abs(
+                train.position.x-
+                player.position.x
+            )<2
+        ){
+
+            if(
+                !jumping &&
+                !sliding
+            ){
+
+                if(shield){
+
+                    shield=false;
+
+                    activePower="NONE";
+
+                    powerTime=0;
+
+                    beep(
+                        110,
+                        .25,
+                        "sawtooth"
+                    );
+
+                }else{
+
+                    loseLife();
+                }
+            }
+        }
+
+
+        if(
+            train.position.z>
+            player.position.z+40
+        ){
+
+            scene.remove(train);
+
+            trains.splice(i,1);
+        }
+    }
+}
+
+
+/* =========================================================
+   COIN COLLISION
+========================================================= */
+
+function coinCollision(){
+
+    for(
+        let i=coins.length-1;
+        i>=0;
+        i--
+    ){
+
+        const coin=
+            coins[i];
+
+
+        let distance=
+            distanceXZ(
+                player,
+                coin
+            );
+
+
+        if(magnet)
+            distance*=.45;
+
+
+        if(
+            distance<1.7 &&
+            Math.abs(
+                player.position.y-
+                coin.position.y
+            )<2
+        ){
+
+            coinCount++;
+
+            score+=100;
+
+            beep(
+                900+
+                coinCount%5*80,
+                .07,
+                "triangle"
+            );
+
+            scene.remove(coin);
+
+            coins.splice(i,1);
+        }
+    }
+}
+
+
+/* =========================================================
+   POWER COLLISION
+========================================================= */
+
+function powerCollision(){
+
+    for(
+        let i=powerUps.length-1;
+        i>=0;
+        i--
+    ){
+
+        const p=
+            powerUps[i];
+
+
+        if(
+            distanceXZ(
+                player,
+                p
+            )<2 &&
+            Math.abs(
+                player.position.y-
+                p.position.y
+            )<2
+        ){
+
+            activatePower(
+                p.userData.type
+            );
+
+            scene.remove(p);
+
+            powerUps.splice(i,1);
+        }
+    }
+}
+
+
+/* =========================================================
+   LOSE LIFE
+========================================================= */
+
+function loseLife(){
+
+    lives--;
+
+    beep(
+        90,
+        .3,
+        "sawtooth"
+    );
+
+    updateLives();
+
+
+    /* CAMERA SHAKE */
+
+    camera.position.x+=.5;
+
+
+    if(lives<=0){
+
+        endGame();
+
+    }else{
+
+        /* short invincibility */
+
+        player.visible=false;
+
+        setTimeout(
+            ()=>{
+                player.visible=true;
+            },
+            700
+        );
+    }
+}
+
+
+function updateLives(){
+
+    document
+        .getElementById("lives")
+        .innerText=
+        "♥ ".repeat(lives);
+}
+
+
+/* =========================================================
+   PLAYER ANIMATION
+========================================================= */
+
+function animatePlayer(delta){
+
+    runTime+=
+        delta*
+        (18+
+        speed*5);
+
+
+    if(
+        !jumping &&
+        !sliding
+    ){
+
+        const swing=
+            Math.sin(runTime)*.72;
+
+
+        leftArm.rotation.x=
+            swing;
+
+        rightArm.rotation.x=
+            -swing;
+
+
+        leftLeg.rotation.x=
+            -swing;
+
+        rightLeg.rotation.x=
+            swing;
+
+
+        body.rotation.z=
+            Math.sin(
+                runTime*2
+            )*.025;
+
+
+        player.position.y=
+            1.1+
+            Math.abs(
+                Math.sin(runTime)
+            )*.055;
+    }
+
+
+    if(jumping){
+
+        player.position.y+=
+            jumpVelocity;
+
+        jumpVelocity-=.018;
+
+
+        if(
+            player.position.y<=1.1
+        ){
+
+            player.position.y=1.1;
+
+            jumping=false;
+
+            jumpVelocity=0;
+        }
+    }
+
+
+    if(sliding){
+
+        player.scale.y=
+            THREE.MathUtils.lerp(
+                player.scale.y,
+                .55,
+                .25
+            );
+
+    }else{
+
+        player.scale.y=
+            THREE.MathUtils.lerp(
+                player.scale.y,
+                1,
+                .25
+            );
+    }
+
+
+    /* SHIELD EFFECT */
+
+    if(shield){
+
+        if(
+            !player.userData.shield
+        ){
+
+            const shieldMesh=
+                new THREE.Mesh(
+                    new THREE.SphereGeometry(
+                        1.7,
+                        32,
+                        32
+                    ),
+                    new THREE.MeshBasicMaterial({
+                        color:0x25cfff,
+                        transparent:true,
+                        opacity:.18,
+                        wireframe:true
+                    })
+                );
+
+            player.add(shieldMesh);
+
+            player.userData.shield=
+                shieldMesh;
+        }
+
+    }else{
+
+        if(
+            player.userData.shield
+        ){
+
+            player.remove(
+                player.userData.shield
+            );
+
+            player.userData.shield=null;
+        }
+    }
+}
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+function updateCamera(){
+
+    const targetX=
+        player.position.x*.65;
+
+
+    camera.position.x+=
+        (
+            targetX-
+            camera.position.x
+        )*.08;
+
+
+    camera.position.y+=
+        (
+            5.4-
+            camera.position.y
+        )*.05;
+
+
+    camera.position.z=
+        player.position.z+12;
+
+
+    camera.lookAt(
+        player.position.x,
+        2.1,
+        player.position.z-32
+    );
+}
+
+
+/* =========================================================
+   DAY / NIGHT
+========================================================= */
+
+function updateDayNight(delta){
+
+    dayTime+=
+        delta*.015;
+
+
+    const cycle=
+        (Math.sin(dayTime)+1)/2;
+
+
+    /* SKY */
+
+    const dayColor=
+        new THREE.Color(
+            0x75cfff
+        );
+
+    const nightColor=
+        new THREE.Color(
+            0x030713
+        );
+
+
+    scene.background.lerpColors(
+        nightColor,
+        dayColor,
+        cycle
+    );
+
+
+    /* FOG */
+
+    const fogDay=
+        new THREE.Color(
+            0x75cfff
+        );
+
+    const fogNight=
+        new THREE.Color(
+            0x030713
+        );
+
+
+    scene.fog.color.lerpColors(
+        fogNight,
+        fogDay,
+        cycle
+    );
+
+
+    /* SUN */
+
+    sun.intensity=
+        .8+
+        cycle*3.2;
+
+
+    hemi.intensity=
+        .6+
+        cycle*1.5;
+
+
+    cityLight.intensity=
+        8+
+        (1-cycle)*35;
+}
+
+
+/* =========================================================
+   WORLD UPDATE
+========================================================= */
+
+function updateWorld(){
+
+    /* BUILDINGS */
+
+    buildings.forEach(
+        building=>{
+
+            if(
+                building.position.z>
+                player.position.z+40
+            ){
+
+                building.position.z=
+                    player.position.z-
+                    THREE.MathUtils.randFloat(
+                        600,
+                        850
+                    );
+            }
+        }
+    );
+
+
+    /* SLEEPERS */
+
+    sleepers.forEach(
+        sleeper=>{
+
+            if(
+                sleeper.position.z>
+                player.position.z+30
+            ){
+
+                sleeper.position.z-=950;
+            }
+        }
+    );
+
+
+    /* POWER UPS */
+
+    powerUps.forEach(
+        p=>{
+
+            p.rotation.y+=.05;
+
+            p.rotation.z+=.025;
+
+            p.position.y=
+                1.4+
+                Math.sin(
+                    performance.now()*.005+
+                    p.position.z
+                )*.18;
+        }
+    );
+}
+
+
+/* =========================================================
+   START GAME
+========================================================= */
+
+function startGame(){
+
+    initAudio();
+
+    document
+        .getElementById("menu")
+        .style.display="none";
+
+    running=true;
+
+    paused=false;
+}
+
+
+/* =========================================================
+   PAUSE
+========================================================= */
+
+function togglePause(){
+
+    if(!running)
+        return;
+
+
+    paused=!paused;
+
+
+    document
+        .getElementById("pauseScreen")
+        .style.display=
+        paused
+        ?
+        "flex"
+        :
+        "none";
+}
+
+
+pauseBtn.onclick=
+    togglePause;
+
+
+resumeBtn.onclick=
+    togglePause;
+
+
+/* =========================================================
+   MENU BUTTON
+========================================================= */
+
+function goMenu(){
+
+    location.reload();
+}
+
+
+menuBtn.onclick=goMenu;
+
+gameMenuBtn.onclick=goMenu;
+
+
+/* =========================================================
+   MENU EVENTS
+========================================================= */
+
+startBtn.onclick=
+    startGame;
+
+
+characterBtn.onclick =
+    ()=>{
+        menu.style.display="none";
+        characterSelect.style.display="flex";
+    };
+
+document.querySelectorAll(".characterCard").forEach(card=>{
+    card.addEventListener("click",()=>{
+        const type=card.dataset.character;
+        applyCharacterStyle(type);
+    });
+});
+
+characterBackBtn.onclick =
+    ()=>{
+        characterSelect.style.display="none";
+        menu.style.display="flex";
+    };
+
+instructionsBtn.onclick=
+    ()=>{
+
+        menu.style.display="none";
+
+        instructions.style.display="flex";
+    };
+
+
+backBtn.onclick=
+    ()=>{
+
+        instructions.style.display="none";
+
+        menu.style.display="flex";
+    };
+
+
+againBtn.onclick=
+    ()=>{
+
+        location.reload();
+    };
+
+
+/* =========================================================
+   SOUND
+========================================================= */
+
+soundBtn.onclick=
+    ()=>{
+
+        soundOn=!soundOn;
+
+        soundBtn.innerText=
+            soundOn
+            ?
+            "🔊"
+            :
+            "🔇";
+
+        if(soundOn)
+            beep(700,.1);
+    };
+
+
+/* =========================================================
+   GAME OVER
+========================================================= */
+
+function endGame(){
+
+    running=false;
+
+    paused=false;
+
+    document
+        .getElementById("finalScore")
+        .innerText=
+        Math.floor(score);
+
+    document
+        .getElementById("finalCoins")
+        .innerText=
+        coinCount;
+
+    document.getElementById("finalGifts").innerText=giftCount;
+    document.getElementById("finalRewards").innerText=rewardCount;
+
+    document
+        .getElementById("gameOver")
+        .style.display="flex";
+
+    beep(
+        80,
+        .5,
+        "sawtooth"
+    );
+}
+
+
+/* =========================================================
+   MAIN GAME LOOP
+========================================================= */
+
+function animate(){
+
+    requestAnimationFrame(
+        animate
+    );
+
+
+    const now=
+        performance.now();
+
+
+    const delta=
+        Math.min(
+            (now-lastTime)/1000,
+            .05
+        );
+
+
+    lastTime=now;
+
+
+    if(
+        running &&
+        !paused
+    ){
+
+        /* FORWARD */
+
+        player.position.z-=
+            speed;
+
+
+        /* LANE */
+
+        player.position.x+=
+            (
+                lanes[lane]-
+                player.position.x
+            )*.18;
+
+
+        /* BOOST */
+
+        let actualSpeed=
+            speed;
+
+
+        if(boost)
+            actualSpeed=
+                speed*1.8;
+
+
+        player.position.z-=
+            actualSpeed-speed;
+
+
+        /* SCORE */
+
+        score+=
+            actualSpeed*.35;
+
+
+        /* SPEED INCREASE */
+
+        speed=
+            Math.min(
+                1.3,
+                .45+
+                score/35000
+            );
+
+
+        /* SPAWN */
+
+        spawnTimer+=delta;
+        coinTimer+=delta;
+        powerTimer+=delta;
+        obstacleTimer+=delta;
+        giftTimer+=delta;
+
+
+        if(
+            spawnTimer>.85
+        ){
+
+            spawnTrain();
+
+            spawnTimer=0;
+        }
+
+
+        if(
+            coinTimer>1.3
+        ){
+
+            spawnCoinLine();
+
+            coinTimer=0;
+        }
+
+
+        if(
+            powerTimer>6
+        ){
+
+            spawnPower();
+
+            powerTimer=0;
+        }
+
+        if(obstacleTimer>1.35){
+            spawnObstacle();
+            obstacleTimer=0;
+        }
+
+        if(giftTimer>7){
+            spawnGift();
+            giftTimer=0;
+        }
+
+
+        /* POWER TIMER */
+
+        if(
+            activePower!=="NONE"
+        ){
+
+            powerTime-=delta;
+
+            if(
+                powerTime<=0
+            ){
+
+                activePower="NONE";
+
+                shield=false;
+                magnet=false;
+                boost=false;
+
+                powerTime=0;
+            }
+
+            updatePowerHUD();
+        }
+
+
+        animatePlayer(delta);
+
+        updateCamera();
+
+        updateWorld();
+
+        updateDayNight(delta);
+
+        trainCollision();
+
+        obstacleCollision();
+        giftCollision();
+
+        coinCollision();
+
+        powerCollision();
+
+
+        /* COIN ANIMATION */
+
+        coins.forEach(
+            coin=>{
+
+                coin.rotation.y+=.09;
+
+                coin.rotation.x+=.015;
+
+                coin.position.y+=
+                    Math.sin(
+                        performance.now()*.005+
+                        coin.position.z
+                    )*.002;
+            }
+        );
+
+
+        /* HUD */
+
+        scoreEl.innerText=
+            Math.floor(score);
+
+        coinsEl.innerText=
+            coinCount;
+
+        document.getElementById("gifts").innerText=giftCount;
+        document.getElementById("rewards").innerText=rewardCount;
+
+        speedEl.innerText=
+            Math.round(
+                speed*100
+            );
+    }
+
+
+    renderer.render(
+        scene,
+        camera
+    );
+}
+
+
+/* =========================================================
+   HUD REFERENCES
+========================================================= */
+
+const scoreEl=
+    document.getElementById(
+        "score"
+    );
+
+const coinsEl=
+    document.getElementById(
+        "coins"
+    );
+
+const speedEl=
+    document.getElementById(
+        "speed"
+    );
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+window.addEventListener(
+    "resize",
+    ()=>{
+
+        camera.aspect=
+            innerWidth/
+            innerHeight;
+
+        camera.updateProjectionMatrix();
+
+        renderer.setSize(
+            innerWidth,
+            innerHeight
+        );
+    }
+);
+
+
+/* DEFAULT CHARACTER */
+
+applyCharacterStyle("classic");
+
+/* START RENDERING */
+
+animate();
+
+</script>
+
+</body>
+</html>/* ...existing code... */
+.shopGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0;max-height:45vh;overflow:auto}
+.shopCard{padding:14px 10px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.045);color:white}
+.shopIcon{font-size:30px}.shopName{font-weight:900;margin:5px 0}
+.shopDesc{font-size:11px;color:#91a2bb;min-height:30px}
+.shopPrice{color:#ffd83d;font-weight:900;margin:8px 0}
+.shopBtn{width:100%;padding:9px;border:0;border-radius:10px;background:linear-gradient(135deg,#00a8ff,#5548ff);color:white;font-weight:800}
+.shopBtn:disabled{opacity:.45}
+.wallet{display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(255,216,61,.1);color:#ffd83d;font-weight:900;margin-bottom:8px}
+/* ...existing code... *//* ...existing code... */
+.shopGrid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:16px 0;max-height:45vh;overflow:auto}
+.shopCard{padding:14px 10px;border-radius:16px;border:1px solid rgba(255,255,255,.14);background:rgba(255,255,255,.045);color:white}
+.shopIcon{font-size:30px}.shopName{font-weight:900;margin:5px 0}
+.shopDesc{font-size:11px;color:#91a2bb;min-height:30px}
+.shopPrice{color:#ffd83d;font-weight:900;margin:8px 0}
+.shopBtn{width:100%;padding:9px;border:0;border-radius:10px;background:linear-gradient(135deg,#00a8ff,#5548ff);color:white;font-weight:800}
+.shopBtn:disabled{opacity:.45}
+.wallet{display:inline-block;padding:8px 14px;border-radius:999px;background:rgba(255,216,61,.1);color:#ffd83d;font-weight:900;margin-bottom:8px}
+/* ...existing code... */<!-- ...existing code... -->
+<button class="mainBtn" id="shopBtn">🛒 SHOP &amp; UPGRADES</button>
+<!-- ...existing code... -->
+<div id="shop" class="screen" style="display:none">
+  <div class="panel">
+    <div class="logo" style="font-size:32px">SHOP</div>
+    <div class="wallet">🪙 Wallet: <span id="walletCoins">0</span></div>
+    <div class="subtitle">Buy upgrades for your next run</div>
+    <div class="shopGrid">
+      <div class="shopCard"><div class="shopIcon">🧲</div><div class="shopName">Magnet+</div><div class="shopDesc">Start with magnet power.</div><div class="shopPrice">🪙 150</div><button class="shopBtn" data-item="magnet">BUY</button></div>
+      <div class="shopCard"><div class="shopIcon">🛡️</div><div class="shopName">Shield+</div><div class="shopDesc">Start with a shield.</div><div class="shopPrice">🪙 200</div><button class="shopBtn" data-item="shield">BUY</button></div>
+      <div class="shopCard"><div class="shopIcon">⚡</div><div class="shopName">Speed Boost</div><div class="shopDesc">Start with speed boost.</div><div class="shopPrice">🪙 250</div><button class="shopBtn" data-item="boost">BUY</button></div>
+      <div class="shopCard"><div class="shopIcon">❤️</div><div class="shopName">Extra Life</div><div class="shopDesc">Start with 4 lives.</div><div class="shopPrice">🪙 300</div><button class="shopBtn" data-item="life">BUY</button></div>
+      <div class="shopCard"><div class="shopIcon">💰</div><div class="shopName">Coin x2</div><div class="shopDesc">Double coins next run.</div><div class="shopPrice">🪙 400</div><button class="shopBtn" data-item="coin2">BUY</button></div>
+      <div class="shopCard"><div class="shopIcon">🦘</div><div class="shopName">Super Jump</div><div class="shopDesc">Higher jump next run.</div><div class="shopPrice">🪙 350</div><button class="shopBtn" data-item="jump">BUY</button></div>
+    </div>
+    <button class="mainBtn" id="shopBackBtn">BACK</button>
+  </div>
+</div>
+<!-- ...existing code... -->
